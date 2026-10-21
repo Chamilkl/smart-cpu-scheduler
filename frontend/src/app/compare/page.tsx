@@ -15,6 +15,7 @@ import { BarChart3, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ProcessInput } from '@/lib/types'
+import { runLocalCompare, generateRandomProcesses } from '@/lib/simulation'
 
 const ALL_ALGOS = ALGORITHMS.map(a => a.value)
 
@@ -31,7 +32,7 @@ export default function ComparePage() {
     setSelectedAlgos(prev => prev.includes(algo) ? prev.filter(a => a !== algo) : [...prev, algo])
   }
 
-  const handleCompare = async () => {
+  const handleCompare = () => {
     if (processes.length === 0) {
       toast.error(isTh ? 'กรุณาเพิ่มโพรเซสอย่างน้อย 1 รายการ' : 'Add at least one process')
       return
@@ -42,8 +43,9 @@ export default function ComparePage() {
     }
     setLoading(true)
     try {
-      const result = await compareAlgorithms(processes, selectedAlgos, timeQuantum)
-      setComparison((result as { comparison: Record<string, unknown> }).comparison)
+      // Runs entirely in browser — instant results
+      const result = runLocalCompare(processes, selectedAlgos, timeQuantum)
+      setComparison(result as Record<string, unknown>)
       toast.success(isTh ? 'เปรียบเทียบอัลกอริทึมสำเร็จ' : 'Comparison complete')
     } catch {
       toast.error(isTh ? 'การเปรียบเทียบล้มเหลว' : 'Comparison failed')
@@ -52,14 +54,10 @@ export default function ComparePage() {
     }
   }
 
-  const handleRandomSample = async () => {
-    try {
-      const { processes: sample } = await generateSample(6)
-      loadProcesses(sample)
-      toast.success(isTh ? 'สุ่มตัวอย่างสำเร็จ' : 'Random sample loaded')
-    } catch {
-      toast.error(isTh ? 'ไม่สามารถโหลดตัวอย่างได้' : 'Failed')
-    }
+  const handleRandomSample = () => {
+    const sample = generateRandomProcesses(6)
+    loadProcesses(sample)
+    toast.success(isTh ? 'สุ่มตัวอย่างสำเร็จ' : 'Random sample loaded')
   }
 
   const handleSelectPreset = (presetProcs: ProcessInput[]) => {

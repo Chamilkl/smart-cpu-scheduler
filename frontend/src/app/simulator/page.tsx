@@ -17,12 +17,12 @@ import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { ALGORITHMS } from '@/lib/constants'
-import { getAIRecommendation, generateSample } from '@/lib/api'
 import { AIRecommendation, ProcessInput } from '@/lib/types'
 import { Zap, Brain, Trash2, GraduationCap, BookOpen, Sparkles, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useBeginnerMode } from '@/contexts/BeginnerModeContext'
+import { localRecommend, generateRandomProcesses } from '@/lib/simulation'
 
 export default function SimulatorPage() {
   const { processes, addProcess, removeProcess, loadProcesses } = useProcesses()
@@ -46,30 +46,27 @@ export default function SimulatorPage() {
     simulate(processes, algorithm, timeQuantum)
   }
 
-  const handleAI = async () => {
+  const handleAI = () => {
     if (processes.length === 0) {
       toast.error(isTh ? 'กรุณาเพิ่มโพรเซสก่อนขอคำแนะนำ AI' : 'Add processes first')
       return
     }
     setAiLoading(true)
     try {
-      const rec = await getAIRecommendation(processes)
+      // Runs entirely in browser – instant, no server needed
+      const rec = localRecommend(processes)
       setAiRec(rec)
     } catch {
-      toast.error(isTh ? 'ไม่สามารถดึงคำแนะนำจาก AI ได้' : 'AI recommendation failed')
+      toast.error(isTh ? 'เกิดข้อผิดพลาดในการวิเคราะห์ AI' : 'AI recommendation failed')
     } finally {
       setAiLoading(false)
     }
   }
 
-  const handleRandomSample = async () => {
-    try {
-      const { processes: sample } = await generateSample(5)
-      loadProcesses(sample)
-      toast.success(isTh ? 'สุ่มชุดข้อมูลตัวอย่างใหม่สำเร็จ' : 'Random sample loaded')
-    } catch {
-      toast.error(isTh ? 'เกิดข้อผิดพลาดในการโหลดตัวอย่าง' : 'Failed to generate sample')
-    }
+  const handleRandomSample = () => {
+    const sample = generateRandomProcesses(5)
+    loadProcesses(sample)
+    toast.success(isTh ? 'สุ่มชุดข้อมูลตัวอย่างใหม่สำเร็จ' : 'Random sample loaded')
   }
 
   const handleSelectPreset = (presetProcs: ProcessInput[]) => {

@@ -1,8 +1,7 @@
 'use client'
 import { useState, useCallback } from 'react'
 import { SimulationResult, ProcessInput } from '@/lib/types'
-import { runSimulation } from '@/lib/api'
-import { getSessionId } from '@/lib/utils'
+import { runLocalSimulation } from '@/lib/simulation'
 import toast from 'react-hot-toast'
 
 export function useSimulation() {
@@ -10,7 +9,7 @@ export function useSimulation() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const simulate = useCallback(async (
+  const simulate = useCallback((
     processes: ProcessInput[],
     algorithm: string,
     timeQuantum: number = 2
@@ -18,13 +17,15 @@ export function useSimulation() {
     setLoading(true)
     setError(null)
     try {
-      const sessionId = getSessionId()
-      const res = await runSimulation(processes, algorithm, timeQuantum, sessionId)
+      // Run entirely in browser — no network request needed
+      const res = runLocalSimulation(processes, algorithm, timeQuantum)
       setResult(res)
-      toast.success(`Simulation complete: ${algorithm}`)
+      toast.success(algorithm === 'AICS'
+        ? `AICS เลือก ${res.aics_decision?.selected_policy} ✓`
+        : `จำลอง ${algorithm} สำเร็จ ✓`)
       return res
     } catch (err: unknown) {
-      const message = (err as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail || (err as { message?: string })?.message || 'Simulation failed'
+      const message = (err as { message?: string })?.message || 'Simulation failed'
       setError(message)
       toast.error(message)
       return null
