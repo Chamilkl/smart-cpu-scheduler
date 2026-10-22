@@ -23,6 +23,7 @@ import toast from 'react-hot-toast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useBeginnerMode } from '@/contexts/BeginnerModeContext'
 import { localRecommend, generateRandomProcesses } from '@/lib/simulation'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function SimulatorPage() {
   const { processes, addProcess, removeProcess, loadProcesses } = useProcesses()
@@ -36,6 +37,7 @@ export default function SimulatorPage() {
 
   const { t, lang } = useLanguage()
   const { isBeginnerMode } = useBeginnerMode()
+  const { trackSimulation, trackAI, trackLesson } = useAnalytics()
   const isTh = lang === 'th'
 
   const handleSimulate = () => {
@@ -43,7 +45,15 @@ export default function SimulatorPage() {
       toast.error(isTh ? 'กรุณาเพิ่มโพรเซสอย่างน้อย 1 รายการ' : 'Add at least one process')
       return
     }
-    simulate(processes, algorithm, timeQuantum)
+    const t0 = performance.now()
+    const simRes = simulate(processes, algorithm, timeQuantum)
+    const execTime = Math.round(performance.now() - t0)
+    if (simRes) {
+      trackSimulation(algorithm, processes.length, execTime, {
+        time_quantum: timeQuantum,
+        simulation_type: algorithm === 'AICS' ? 'aics' : 'single',
+      })
+    }
   }
 
   const handleAI = () => {
@@ -56,7 +66,13 @@ export default function SimulatorPage() {
       // Runs entirely in browser – instant, no server needed
       const rec = localRecommend(processes)
       setAiRec(rec)
+      trackAI('recommend', {
+        process_count: processes.length,
+        recommended_algorithm: rec.recommended_algorithm,
+        status: 'success',
+      })
     } catch {
+      trackAI('recommend', { process_count: processes.length, status: 'error' })
       toast.error(isTh ? 'เกิดข้อผิดพลาดในการวิเคราะห์ AI' : 'AI recommendation failed')
     } finally {
       setAiLoading(false)

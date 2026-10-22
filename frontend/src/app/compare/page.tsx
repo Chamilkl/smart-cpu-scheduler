@@ -16,6 +16,7 @@ import toast from 'react-hot-toast'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { ProcessInput } from '@/lib/types'
 import { runLocalCompare, generateRandomProcesses } from '@/lib/simulation'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 const ALL_ALGOS = ALGORITHMS.map(a => a.value)
 
@@ -26,6 +27,7 @@ export default function ComparePage() {
   const [comparison, setComparison] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(false)
   const { t, lang } = useLanguage()
+  const { trackAI } = useAnalytics()
   const isTh = lang === 'th'
 
   const toggleAlgo = (algo: string) => {
@@ -47,8 +49,18 @@ export default function ComparePage() {
       const result = runLocalCompare(processes, selectedAlgos, timeQuantum)
       setComparison(result as Record<string, unknown>)
       toast.success(isTh ? 'เปรียบเทียบอัลกอริทึมสำเร็จ' : 'Comparison complete')
+      trackAI('compare', {
+        algorithms: selectedAlgos,
+        process_count: processes.length,
+        status: 'success',
+      })
     } catch {
       toast.error(isTh ? 'การเปรียบเทียบล้มเหลว' : 'Comparison failed')
+      trackAI('compare', {
+        algorithms: selectedAlgos,
+        process_count: processes.length,
+        status: 'error',
+      })
     } finally {
       setLoading(false)
     }

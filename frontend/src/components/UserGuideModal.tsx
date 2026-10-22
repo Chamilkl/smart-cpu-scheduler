@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { CheckCircle2, Cpu, FileSpreadsheet, Play, BarChart2, GitCompare, ArrowRight, ArrowLeft } from 'lucide-react'
@@ -13,6 +14,7 @@ interface Props {
 export function UserGuideModal({ open, onClose }: Props) {
   const [currentStep, setCurrentStep] = useState(0)
   const { lang } = useLanguage()
+  const { trackLesson } = useAnalytics()
   const isTh = lang === 'th'
 
   const steps = [
@@ -213,6 +215,15 @@ export function UserGuideModal({ open, onClose }: Props) {
       ),
     },
   ]
+
+  useEffect(() => {
+    if (open) {
+      trackLesson(steps[currentStep]?.title || 'คู่มือการใช้งาน 5 ขั้นตอน', {
+        step_number: currentStep + 1,
+        action: 'guide_modal_open',
+      })
+    }
+  }, [open, currentStep, trackLesson])
 
   const step = steps[currentStep]
 

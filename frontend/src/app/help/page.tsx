@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { TECHNICAL_GLOSSARY } from '@/lib/constants'
 import { UserGuideModal } from '@/components/UserGuideModal'
 import { InteractiveOnboarding } from '@/components/InteractiveOnboarding'
+import { EducationalQuizModal } from '@/components/EducationalQuizModal'
 import {
   HelpCircle,
   BookOpen,
@@ -16,7 +17,8 @@ import {
   BarChart3,
   Lightbulb,
   CheckCircle2,
-  Cpu
+  Cpu,
+  Award
 } from 'lucide-react'
 
 export default function HelpPage() {
@@ -24,6 +26,7 @@ export default function HelpPage() {
   const isTh = lang === 'th'
   const [guideModalOpen, setGuideModalOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
+  const [quizModalOpen, setQuizModalOpen] = useState(false)
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
 
   const faqs = [
@@ -64,6 +67,7 @@ export default function HelpPage() {
       {/* Modals */}
       <UserGuideModal open={guideModalOpen} onClose={() => setGuideModalOpen(false)} />
       <InteractiveOnboarding forceOpen={tourOpen} onClose={() => setTourOpen(false)} />
+      <EducationalQuizModal open={quizModalOpen} onClose={() => setQuizModalOpen(false)} />
 
       {/* Header Banner */}
       <div className="rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 sm:p-10 shadow-xl relative overflow-hidden">
@@ -97,6 +101,15 @@ export default function HelpPage() {
               <Sparkles className="h-4 w-4 text-amber-300" />
               <span>{isTh ? 'เริ่มทัวร์แนะนำเว็บไซต์ (Interactive Tour)' : 'Restart Onboarding Tour'}</span>
             </button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setQuizModalOpen(true)}
+              className="bg-amber-400 text-gray-900 hover:bg-amber-300 border-0 font-bold shadow-md shadow-amber-400/20"
+            >
+              <Award className="h-4 w-4 text-amber-900" />
+              <span>{isTh ? '🎯 แบบทดสอบวัดความรู้ (Quiz)' : '🎯 Knowledge Quiz'}</span>
+            </Button>
           </div>
         </div>
       </div>
